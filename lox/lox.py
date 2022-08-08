@@ -2,6 +2,9 @@ import sys
 import typing
 from scanner import Scanner
 from token import Token
+from parser import Parser
+from expr import Expr
+from ast_printer import AstPrinter
 
 class Lox:
     had_error: bool = False
@@ -27,13 +30,19 @@ class Lox:
     def run(cls, source: str) -> None:
         scanner: Scanner = Scanner(source)
         tokens: list[Token] = scanner.scan_tokens()
-
+        
         if scanner.had_error:
             cls.had_error = True
             return
 
-        for token in tokens:
-            print(token)
+        parser: Parser = Parser(tokens)
+        expression: Expr = parser.parse()
+
+        if parser.had_error:
+            cls.had_error = True
+            return
+
+        AstPrinter().print(expression)
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
