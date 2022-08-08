@@ -9,3 +9,6 @@ class Token:
 
     def __str__(self) -> str:
         return f'{self.type} {self.lexeme} {self.literal}'
+    
+    def __repr__(self) -> str:
+        return f'{self.type} {self.lexeme} {self.literal}'

@@ -124,7 +124,7 @@ class Scanner:
     def match(self, expected: str) -> bool:
         if self.is_at_end:
             return False
-        if self.source[self.current+1] != expected:
+        if self.source[self.current] != expected:
             return False
         self.current += 1
         return True

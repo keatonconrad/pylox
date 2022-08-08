@@ -26,3 +26,14 @@ class LoxParseError(LoxException):
             self.report(self.token.line, " at end", self.message)
         else :
             self.report(self.token.line, " at '{}'".format(self.token.lexeme), self.message)
+
+class LoxRuntimeError(LoxException):
+    def __init__(self, token: Token, message: str):
+        self.token = token
+        self.message = message
+    
+    def what(self) -> None:
+        if self.token.type == TokenType.EOF :
+            self.report(self.token.line, " at end", self.message)
+        else :
+            self.report(self.token.line, " at '{}'".format(self.token.lexeme), self.message)
