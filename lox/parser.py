@@ -1,6 +1,6 @@
 from token import Token
-from expr import Expr, Binary, Unary, Literal, Grouping
-from stmt import Stmt, Print, Expression
+from expr import Expr, Binary, Unary, Literal, Grouping, Variable
+from stmt import Stmt, Print, Expression, Var
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -15,11 +15,30 @@ class Parser:
         try:
             statements: list[Stmt] = []
             while not self.is_at_end:
-                statements.append(self.statement())
+                statements.append(self.declaration())
             return statements
         except LoxParseError as error:
             error.what()
             return None
+
+    def declaration(self) -> Optional[Stmt]:
+        try:
+            if self.match(TokenType.VAR):
+                return self.var_declaration()
+            return self.statement()
+        except LoxParseError:
+            self.synchronize()
+
+    def var_declaration(self) -> Stmt:
+        name: Token = self.consume(TokenType.IDENTIFIER, 'Expect variable name.')
+
+        # Sets up optional initialized value
+        initializer: Expr = None
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+        
+        self.consume(TokenType.SEMICOLON, 'Expect ";" after variable declaration.')
+        return Var(name, initializer)
 
     def statement(self) -> Stmt:
         if self.match(TokenType.PRINT):
@@ -98,6 +117,8 @@ class Parser:
             # We just consumed the number or string in the self.match,
             # so we have to go back and get the previous token's literal
             return Literal(self.previous().literal)
+        elif self.match(TokenType.IDENTIFIER):
+            return Variable(self.previous())
         elif self.match(TokenType.LEFT_PAREN):
             expr: Expr = self.expression()
             self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after expression.')

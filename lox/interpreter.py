@@ -1,13 +1,15 @@
-from stmt import Expression, Print, Stmt
+from environment import Environment
+from stmt import Expression, Print, Stmt, Var
 from token_type import TokenType
 from visitor import Visitor
-from expr import Expr, Literal, Grouping, Unary, Binary
+from expr import Expr, Literal, Grouping, Unary, Binary, Variable
 from token import Token
 from exceptions import LoxRuntimeError
 
 class Interpreter(Visitor):
     def __init__(self):
         self.had_error: bool = False
+        self.environment: Environment = Environment()
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -75,12 +77,22 @@ class Interpreter(Visitor):
     def visit_grouping_expr(self, expr: Grouping):
         return self.evaluate(expr.expression)
 
-    def visit_expression_stmt(self, stmt: Expression):
+    def visit_variable_expr(self, expr: Variable) -> Expr:
+        return self.environment.get(expr.name)
+
+    def visit_expression_stmt(self, stmt: Expression) -> None:
         self.evaluate(stmt.expression)
 
-    def visit_print_stmt(self, stmt: Print):
+    def visit_print_stmt(self, stmt: Print) -> None:
         value = self.evaluate(stmt.expression)
         print(self.stringify(value))
+
+    def visit_var_stmt(self, stmt: Var) -> None:
+        value = None
+        if stmt.initializer is not None:
+            value = self.evaluate(stmt.initializer)
+        
+        self.environment.define(stmt.name.lexeme, value)
 
     def check_number_operand(self, operator: Token, *operands: object) -> None:
         for operand in operands:

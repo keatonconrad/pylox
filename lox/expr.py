@@ -33,7 +33,7 @@ class Literal(Expr):
         return visitor.visit_literal_expr(self)
     
     def __str__(self) -> str:
-        return f'{self.value}'
+        return str(self.value)
 
 class Unary(Expr):
     def __init__(self, operator: Token, right: Expr):
@@ -45,3 +45,13 @@ class Unary(Expr):
     
     def __str__(self) -> str:
         return f'{self.operator} {self.right}'
+        
+class Variable(Expr):
+    def __init__(self, name: Token):
+        self.name = name
+    
+    def accept(self, visitor):
+        return visitor.visit_variable_expr(self)
+
+    def __str__(self) -> str:
+        return str(self.name)
