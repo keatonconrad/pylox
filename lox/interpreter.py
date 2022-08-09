@@ -15,7 +15,8 @@ class Interpreter(Visitor):
         try:
             for statement in statements:
                 self.execute(statement)
-        except LoxRuntimeError:
+        except LoxRuntimeError as error:
+            error.what()
             return
 
     def visit_literal_expr(self, expr: Literal):
