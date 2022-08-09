@@ -27,3 +27,9 @@ class Var(Stmt):
     def accept(self, visitor: "Visitor"):
         return visitor.visit_var_stmt(self)
         
+class Block(Stmt):
+    def __init__(self, statements: list[Stmt]):
+        self.statements = statements
+    
+    def accept(self, visitor: "Visitor"):
+        return visitor.visit_block_stmt(self)

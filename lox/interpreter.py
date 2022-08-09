@@ -1,5 +1,6 @@
+from os import environ
 from environment import Environment
-from stmt import Expression, Print, Stmt, Var
+from stmt import Expression, Print, Stmt, Var, Block
 from token_type import TokenType
 from visitor import Visitor
 from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign
@@ -9,7 +10,7 @@ from exceptions import LoxRuntimeError
 class Interpreter(Visitor):
     def __init__(self):
         self.had_error: bool = False
-        self.environment: Environment = Environment()
+        self.environment: Environment = Environment()  # Current environment
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -93,6 +94,9 @@ class Interpreter(Visitor):
         value = self.evaluate(stmt.expression)
         print(self.stringify(value))
 
+    def visit_block_stmt(self, stmt: Block) -> None:
+        self.execute_block(stmt.statements, Environment(self.environment))
+
     def visit_var_stmt(self, stmt: Var) -> None:
         value = None
         if stmt.initializer is not None:
@@ -126,6 +130,15 @@ class Interpreter(Visitor):
 
     def execute(self, stmt: Stmt):
         stmt.accept(self)
+
+    def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+        previous: Environment = self.environment
+        try:
+            self.environment = environment
+            for statement in statements:
+                self.execute(statement)
+        finally:
+            self.environment = previous
 
     def stringify(self, obj) -> str:
         if obj is None:

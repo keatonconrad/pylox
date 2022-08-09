@@ -1,6 +1,6 @@
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from stmt import Stmt, Print, Expression, Var
+from stmt import Stmt, Print, Expression, Var, Block
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -43,6 +43,8 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        elif self.match(TokenType.LEFT_BRACE):
+            return Block(self.block())
         return self.expression_statement()
 
     def print_statement(self) -> Stmt:
@@ -54,6 +56,13 @@ class Parser:
         expr: Expr = self.expression()
         self.consume(TokenType.SEMICOLON, 'Expect ";" after expression.')
         return Expression(expr)
+
+    def block(self) -> list[Stmt]:
+        statements = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end:
+            statements.append(self.declaration())
+        self.consume(TokenType.RIGHT_BRACE, 'Expect "}" after block.')
+        return statements
 
     def expression(self) -> Expr:
         return self.assignment()
