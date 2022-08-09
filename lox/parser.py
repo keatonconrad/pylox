@@ -1,5 +1,5 @@
 from token import Token
-from expr import Expr, Binary, Unary, Literal, Grouping, Variable
+from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
 from stmt import Stmt, Print, Expression, Var
 from token_type import TokenType
 from exceptions import LoxParseError
@@ -56,7 +56,21 @@ class Parser:
         return Expression(expr)
 
     def expression(self) -> Expr:
-        return self.equality()
+        return self.assignment()
+
+    def assignment(self) -> Expr:
+        expr: Expr = self.equality()
+
+        if self.match(TokenType.EQUAL):
+            equals: Token = self.previous()
+            value: Expr = self.assignment()
+
+            if isinstance(expr, Variable):
+                return Assign(expr.name, value)
+            
+            LoxParseError(equals, 'Invalid assignment target.').what()
+        
+        return expr
     
     def equality(self) -> Expr:
         expr: Expr = self.comparison()

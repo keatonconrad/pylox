@@ -55,3 +55,11 @@ class Variable(Expr):
 
     def __str__(self) -> str:
         return str(self.name)
+
+class Assign(Expr):
+    def __init__(self, name: Token, value: Expr):
+        self.name = name
+        self.value = value
+    
+    def accept(self, visitor):
+        return visitor.visit_assign_expr(self)

@@ -2,7 +2,7 @@ from environment import Environment
 from stmt import Expression, Print, Stmt, Var
 from token_type import TokenType
 from visitor import Visitor
-from expr import Expr, Literal, Grouping, Unary, Binary, Variable
+from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign
 from token import Token
 from exceptions import LoxRuntimeError
 
@@ -79,6 +79,11 @@ class Interpreter(Visitor):
 
     def visit_variable_expr(self, expr: Variable) -> Expr:
         return self.environment.get(expr.name)
+
+    def visit_assign_expr(self, expr: Assign) -> Expr:
+        value = self.evaluate(expr.value)
+        self.environment.assign(expr.name, value)
+        return value
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.evaluate(stmt.expression)
