@@ -1,3 +1,4 @@
+from stmt import Expression, Print, Stmt
 from token_type import TokenType
 from visitor import Visitor
 from expr import Expr, Literal, Grouping, Unary, Binary
@@ -8,10 +9,10 @@ class Interpreter(Visitor):
     def __init__(self):
         self.had_error: bool = False
 
-    def interpret(self, expression: Expr) -> None:
+    def interpret(self, statements: list[Stmt]) -> None:
         try:
-            value = self.evaluate(expression)
-            print(self.stringify(value))
+            for statement in statements:
+                self.execute(statement)
         except LoxRuntimeError:
             return
 
@@ -74,6 +75,13 @@ class Interpreter(Visitor):
     def visit_grouping_expr(self, expr: Grouping):
         return self.evaluate(expr.expression)
 
+    def visit_expression_stmt(self, stmt: Expression):
+        self.evaluate(stmt.expression)
+
+    def visit_print_stmt(self, stmt: Print):
+        value = self.evaluate(stmt.expression)
+        print(self.stringify(value))
+
     def check_number_operand(self, operator: Token, *operands: object) -> None:
         for operand in operands:
             if not isinstance(operand, float) and not isinstance(operand, int):
@@ -97,6 +105,9 @@ class Interpreter(Visitor):
     
     def evaluate(self, expr: Expr):
         return expr.accept(self)
+
+    def execute(self, stmt: Stmt):
+        stmt.accept(self)
 
     def stringify(self, obj) -> str:
         if obj is None:

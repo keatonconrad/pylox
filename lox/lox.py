@@ -1,10 +1,10 @@
 import sys
 import typing
 from interpreter import Interpreter
+from stmt import Stmt
 from scanner import Scanner
 from token import Token
 from parser import Parser
-from expr import Expr
 from ast_printer import AstPrinter
 
 class Lox:
@@ -42,7 +42,7 @@ class Lox:
             return
 
         parser: Parser = Parser(tokens)
-        expression: Expr = parser.parse()
+        statements: list[Stmt] = parser.parse()
 
         if parser.had_error:
             cls.had_error = True
@@ -54,7 +54,7 @@ class Lox:
 
         #print(tokens)
         #AstPrinter().print(expression)
-        cls.interpreter.interpret(expression)
+        cls.interpreter.interpret(statements)
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
