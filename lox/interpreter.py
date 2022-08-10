@@ -1,6 +1,6 @@
 from os import environ
 from environment import Environment
-from stmt import Expression, Print, Stmt, Var, Block
+from stmt import Expression, Print, Stmt, Var, Block, If
 from token_type import TokenType
 from visitor import Visitor
 from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign
@@ -103,6 +103,12 @@ class Interpreter(Visitor):
             value = self.evaluate(stmt.initializer)
         
         self.environment.define(stmt.name.lexeme, value)
+
+    def visit_if_stmt(self, stmt: If) -> None:
+        if self.is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.execute(stmt.else_branch)
 
     def check_number_operand(self, operator: Token, *operands: object) -> None:
         for operand in operands:

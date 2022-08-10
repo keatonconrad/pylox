@@ -1,6 +1,6 @@
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from stmt import Stmt, Print, Expression, Var, Block
+from stmt import Stmt, Print, Expression, Var, Block, If
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -45,7 +45,21 @@ class Parser:
             return self.print_statement()
         elif self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
+        elif self.match(TokenType.IF):
+            return self.if_statement()
         return self.expression_statement()
+
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "if".')
+        condition: Expr = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after if condition.')
+
+        then_branch: Stmt = self.statement()
+        else_branch: Stmt = None
+        if self.match(TokenType.ELSE):
+            else_branch = self.statement()
+        
+        return If(condition, then_branch, else_branch)
 
     def print_statement(self) -> Stmt:
         value: Expr = self.expression()
