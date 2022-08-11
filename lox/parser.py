@@ -1,6 +1,6 @@
 from token import Token
-from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign
-from stmt import Stmt, Print, Expression, Var, Block, If
+from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
+from stmt import Stmt, Print, Expression, Var, Block, If, While
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -43,11 +43,21 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        elif self.match(TokenType.WHILE):
+            return self.while_statement()
         elif self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
         elif self.match(TokenType.IF):
             return self.if_statement()
         return self.expression_statement()
+
+    def while_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "while".')
+        condition: Expr = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after condition.')
+        body: Stmt = self.statement()
+        
+        return While(condition, body)
 
     def if_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "if".')
@@ -82,7 +92,7 @@ class Parser:
         return self.assignment()
 
     def assignment(self) -> Expr:
-        expr: Expr = self.equality()
+        expr: Expr = self.or_expr()
 
         if self.match(TokenType.EQUAL):
             equals: Token = self.previous()
@@ -93,6 +103,26 @@ class Parser:
             
             LoxParseError(equals, 'Invalid assignment target.').what()
         
+        return expr
+
+    def or_expr(self) -> Expr:
+        expr: Expr = self.and_expr()
+
+        while self.match(TokenType.OR):
+            operator: Token = self.previous()
+            right: Expr = self.and_expr()
+            expr = Logical(expr, operator, right)
+
+        return expr
+
+    def or_expr(self) -> Expr:
+        expr: Expr = self.equality()
+
+        while self.match(TokenType.AND):
+            operator: Token = self.previous()
+            right: Expr = self.equality()
+            expr = Logical(expr, operator, right)
+
         return expr
     
     def equality(self) -> Expr:

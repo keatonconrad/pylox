@@ -1,9 +1,9 @@
 from os import environ
 from environment import Environment
-from stmt import Expression, Print, Stmt, Var, Block, If
+from stmt import Expression, Print, Stmt, Var, Block, If, While
 from token_type import TokenType
 from visitor import Visitor
-from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign
+from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical
 from token import Token
 from exceptions import LoxRuntimeError
 
@@ -87,12 +87,30 @@ class Interpreter(Visitor):
         self.environment.assign(expr.name, value)
         return value
 
+    def visit_logical_expr(self, expr: Logical):
+        left = self.evaluate(expr.left)
+
+        if expr.operator.type == TokenType.OR:
+            # If or statement
+            if self.is_truthy(left):
+                return left
+        else:
+            # If and statement
+            if not self.is_truthy(left):
+                return left
+        
+        return self.evaluate(expr.right)
+
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.evaluate(stmt.expression)
 
     def visit_print_stmt(self, stmt: Print) -> None:
         value = self.evaluate(stmt.expression)
         print(self.stringify(value))
+
+    def visit_while_stmt(self, stmt: While) -> None:
+        while self.is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.body)
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self.environment))
