@@ -1,6 +1,6 @@
 from lib2to3.pgen2.tokenize import TokenError
 from token import Token
-from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
+from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
 from stmt import Stmt, Print, Expression, Var, Block, If, While, Break
 from token_type import TokenType
 from exceptions import LoxParseError
@@ -216,7 +216,34 @@ class Parser:
             right: Expr = self.unary()
             return Unary(operator, right)
 
-        return self.primary()
+        return self.call()
+
+    def call(self) -> Expr:
+        expr: Expr = self.primary()  # "Left operand" to the call
+
+        while True:
+            if self.match(TokenType.LEFT_PAREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+        
+        return expr
+
+    def finish_call(self, callee: Expr) -> Expr:
+        arguments: list[Expr] = []
+
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(arguments) >= 255:
+                    LoxParseError(self.peek(), 'Can\'t have more than 255 arguments').what()
+                    self.had_error = True
+                arguments.append(self.expression())
+                if not self.match(TokenType.COMMA):
+                    break
+        
+        paren: Token = self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after arguments.')
+
+        return Call(callee, paren, arguments)
 
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):

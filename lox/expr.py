@@ -75,3 +75,12 @@ class Logical(Expr):
     
     def __str__(self) -> str:
         return f'{self.left} {self.operator} {self.right}'
+
+class Call(Expr):
+    def __init__(self, callee: Expr, paren: Token, arguments: list[Expr]):
+        self.callee = callee
+        self.paren = paren  # Used to store this token's location to report function call errors better
+        self.arguments = arguments
+
+    def accept(self, visitor):
+        return visitor.visit_call_expr(self)

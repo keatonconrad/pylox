@@ -1,16 +1,28 @@
-from os import environ
 from environment import Environment
+from lox_callable import LoxCallable
 from stmt import Expression, Print, Stmt, Var, Block, If, While, Break
 from token_type import TokenType
 from visitor import Visitor
-from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical
+from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical, Call
 from token import Token
 from exceptions import LoxRuntimeError, LoxBreakException
+import time
 
 class Interpreter(Visitor):
     def __init__(self):
         self.had_error: bool = False
-        self.environment: Environment = Environment()  # Current environment
+        self.globals: Environment = Environment()  # Global scope
+        self.environment: Environment = self.globals  # Current scope starts as global scope
+
+        class Clock(LoxCallable):
+            def arity(self):
+                return 0
+            def call(self, interpreter: Interpreter, arguments: list = []):
+                return time.process_time()
+            def __str__(self):
+                return '<native function "clock">'
+        
+        self.globals.define('clock', Clock())
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -19,6 +31,21 @@ class Interpreter(Visitor):
         except LoxRuntimeError as error:
             error.what()
             return
+
+    def visit_call_expr(self, expr: Call):
+        callee = self.evaluate(expr.callee)
+
+        arguments: list = []
+        for argument in expr.arguments:
+            arguments.append(self.evaluate(argument))
+
+        if not isinstance(callee, LoxCallable):
+            raise LoxRuntimeError(expr.paren, 'Can only call functions and classes.')
+
+        if len(arguments) != callee.arity():
+            raise LoxRuntimeError(expr.paren, f'Expected {callee.arity()} arguments but got {len(arguments)}.')
+        
+        return callee.call(self, arguments) 
 
     def visit_literal_expr(self, expr: Literal):
         return expr.value
