@@ -1,11 +1,11 @@
 from os import environ
 from environment import Environment
-from stmt import Expression, Print, Stmt, Var, Block, If, While
+from stmt import Expression, Print, Stmt, Var, Block, If, While, Break
 from token_type import TokenType
 from visitor import Visitor
 from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical
 from token import Token
-from exceptions import LoxRuntimeError
+from exceptions import LoxRuntimeError, LoxBreakException
 
 class Interpreter(Visitor):
     def __init__(self):
@@ -109,8 +109,14 @@ class Interpreter(Visitor):
         print(self.stringify(value))
 
     def visit_while_stmt(self, stmt: While) -> None:
-        while self.is_truthy(self.evaluate(stmt.condition)):
-            self.execute(stmt.body)
+        try:
+            while self.is_truthy(self.evaluate(stmt.condition)):
+                self.execute(stmt.body)
+        except LoxBreakException:
+            pass
+
+    def visit_break_stmt(self, stmt: Break) -> None:
+        raise LoxBreakException()
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self.environment))

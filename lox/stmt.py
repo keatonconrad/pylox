@@ -50,3 +50,10 @@ class While(Stmt):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_while_stmt(self)
+
+class Break(Stmt):
+    def __init__(self):
+        pass
+
+    def accept(self, visitor: "Visitor"):
+        return visitor.visit_break_stmt(self)

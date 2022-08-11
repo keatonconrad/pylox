@@ -1,7 +1,7 @@
-from ast import increment_lineno
+from lib2to3.pgen2.tokenize import TokenError
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
-from stmt import Stmt, Print, Expression, Var, Block, If, While
+from stmt import Stmt, Print, Expression, Var, Block, If, While, Break
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -11,6 +11,7 @@ class Parser:
         self.tokens: list[Token] = tokens
         self.current: int = 0
         self.had_error: bool = False
+        self.loop_depth: int = 0
 
     def parse(self) -> Optional[Expr]:
         try:
@@ -50,6 +51,8 @@ class Parser:
             return Block(self.block())
         elif self.match(TokenType.FOR):
             return self.for_statement()
+        elif self.match(TokenType.BREAK):
+            return self.break_statement()
         elif self.match(TokenType.IF):
             return self.if_statement()
         return self.expression_statement()
@@ -75,17 +78,19 @@ class Parser:
             increment = self.expression()
         self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after for clauses.')
 
-        body: Stmt = self.statement()
-
-        if increment is not None:
-            body = Block([body, Expression(increment)])
-        if condition is None:
-            condition = Literal(True)
-        body = While(condition, body)
-        if initializer is not None:
-            body = Block([initializer, body])
-
-        return body
+        try:
+            self.loop_depth += 1
+            body: Stmt = self.statement()
+            if increment is not None:
+                body = Block([body, Expression(increment)])
+            if condition is None:
+                condition = Literal(True)
+            body = While(condition, body)
+            if initializer is not None:
+                body = Block([initializer, body])
+                return body
+        finally:
+            self.loop_depth -= 1
 
     def while_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "while".')
@@ -94,6 +99,10 @@ class Parser:
         body: Stmt = self.statement()
         
         return While(condition, body)
+
+    def break_statement(self) -> Stmt:
+        self.consume(TokenType.SEMICOLON, 'Expect ";" after break.')
+        return Break()
 
     def if_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "if".')

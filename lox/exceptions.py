@@ -37,3 +37,7 @@ class LoxRuntimeError(LoxException):
             self.report(self.token.line, " at end", self.message)
         else :
             self.report(self.token.line, " at '{}'".format(self.token.lexeme), self.message)
+
+class LoxBreakException(LoxException):
+    def __init__(self):
+        pass
