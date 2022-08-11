@@ -1,3 +1,4 @@
+from ast import increment_lineno
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical
 from stmt import Stmt, Print, Expression, Var, Block, If, While
@@ -47,9 +48,44 @@ class Parser:
             return self.while_statement()
         elif self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
+        elif self.match(TokenType.FOR):
+            return self.for_statement()
         elif self.match(TokenType.IF):
             return self.if_statement()
         return self.expression_statement()
+
+    def for_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "for".')
+
+        initializer: Stmt = None
+        if self.match(TokenType.SEMICOLON):
+            pass
+        elif self.match(TokenType.VAR):
+            initializer = self.var_declaration()
+        else:
+            initializer = self.expression_statement()
+
+        condition: Expr = None
+        if not self.check(TokenType.SEMICOLON):
+            condition = self.expression()
+        self.consume(TokenType.SEMICOLON, 'Expect ";" after loop condition.')
+
+        increment: Expr = None
+        if not self.check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after for clauses.')
+
+        body: Stmt = self.statement()
+
+        if increment is not None:
+            body = Block([body, Expression(increment)])
+        if condition is None:
+            condition = Literal(True)
+        body = While(condition, body)
+        if initializer is not None:
+            body = Block([initializer, body])
+
+        return body
 
     def while_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "while".')
