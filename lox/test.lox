@@ -1,23 +1,10 @@
-var a = 0;
-
-fun testFunc(testString) {
-  print testString;
-  for (var i = 0; i < 10; i = i + 1) {
-    print "i";
-    print i;
-    for (var j = 0; j < 20; j = j + 1) {
-      print "j";
-      print j;
-      if (j > 0 and j / 2 == 4) {
-        break;
-      }
-    }
-    if (i > 0 and i / 3 == 3) {
-      break;
-    }
-  }
-  print testString;
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
 }
 
-print testFunc;
-print testFunc("my test string goes here!");
+for (var i = 0; i < 30; i = i + 1) {
+  print fib(i);
+}
+
+print clock();

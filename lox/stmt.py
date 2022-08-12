@@ -66,3 +66,11 @@ class Function(Stmt):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_function_stmt(self)
+
+class Return(Stmt):
+    def __init__(self, keyword: Token, value: Expr):
+        self.keyword = keyword
+        self.value = value
+
+    def accept(self, visitor: "Visitor"):
+        return visitor.visit_return_stmt(self)

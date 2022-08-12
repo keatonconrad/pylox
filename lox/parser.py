@@ -1,7 +1,6 @@
-from lib2to3.pgen2.tokenize import TokenError
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
-from stmt import Stmt, Print, Expression, Var, Block, If, While, Break, Function
+from stmt import Stmt, Print, Expression, Var, Block, If, While, Break, Function, Return
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -57,7 +56,17 @@ class Parser:
             return self.break_statement()
         elif self.match(TokenType.IF):
             return self.if_statement()
+        elif self.match(TokenType.RETURN):
+            return self.return_statement()
         return self.expression_statement()
+
+    def return_statement(self) -> Stmt:
+        keyword: Token = self.previous()  # We keep the "return" keyword for error reporting
+        value: Expr = None
+        if not self.check(TokenType.SEMICOLON):
+            value = self.expression()
+        self.consume(TokenType.SEMICOLON, 'Expect ";" after return value.')
+        return Return(keyword, value)
 
     def for_statement(self) -> Stmt:
         self.consume(TokenType.LEFT_PAREN, 'Expect "(" after "for".')

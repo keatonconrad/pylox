@@ -41,3 +41,7 @@ class LoxRuntimeError(LoxException):
 class LoxBreakException(LoxException):
     def __init__(self):
         pass
+
+class LoxReturnException(RuntimeError):
+    def __init__(self, value):
+        self.value = value
