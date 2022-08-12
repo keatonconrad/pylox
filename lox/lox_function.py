@@ -1,4 +1,3 @@
-from msilib.schema import Environment
 from lox_callable import LoxCallable
 from stmt import Function
 from environment import Environment
@@ -20,4 +19,4 @@ class LoxFunction(LoxCallable):
         return len(self.declaration.params)
 
     def __str__(self) -> str:
-        return f'<fn {self.declaration.name.lexeme>}'
+        return f'<fn {self.declaration.name.lexeme}>'

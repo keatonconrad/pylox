@@ -1,19 +1,23 @@
 var a = 0;
 
-for (var i = 0; i < 10; i = i + 1) {
-  print "i";
-  print i;
-  for (var j = 0; j < 20; j = j + 1) {
-    print "j";
-    print j;
-    if (j > 0 and j / 2 == 4) {
+fun testFunc(testString) {
+  print testString;
+  for (var i = 0; i < 10; i = i + 1) {
+    print "i";
+    print i;
+    for (var j = 0; j < 20; j = j + 1) {
+      print "j";
+      print j;
+      if (j > 0 and j / 2 == 4) {
+        break;
+      }
+    }
+    if (i > 0 and i / 3 == 3) {
       break;
     }
   }
-  if (i > 0 and i / 3 == 3) {
-    break;
-  }
+  print testString;
 }
 
-var temp;
-print temp;
+print testFunc;
+print testFunc("my test string goes here!");
