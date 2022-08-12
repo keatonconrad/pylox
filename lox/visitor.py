@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from expr import Binary, Grouping, Literal, Unary
-from stmt import Expression, Print
+from stmt import Expression
 
 class Visitor(ABC):
     @abstractmethod
@@ -21,8 +21,4 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_expression_stmt(self, stmt: Expression):
-        pass
-    
-    @abstractmethod
-    def visit_print_stmt(self, stmt: Print):
         pass

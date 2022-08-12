@@ -15,7 +15,6 @@ class Scanner:
         'if': TokenType.IF,
         'nil': TokenType.NIL,
         'or': TokenType.OR,
-        'print': TokenType.PRINT,
         'return': TokenType.RETURN,
         'super': TokenType.SUPER,
         'this': TokenType.THIS,

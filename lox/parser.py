@@ -1,6 +1,6 @@
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
-from stmt import Stmt, Print, Expression, Var, Block, If, While, Break, Function, Return
+from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -44,9 +44,7 @@ class Parser:
         return Var(name, initializer)
 
     def statement(self) -> Stmt:
-        if self.match(TokenType.PRINT):
-            return self.print_statement()
-        elif self.match(TokenType.WHILE):
+        if self.match(TokenType.WHILE):
             return self.while_statement()
         elif self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
@@ -126,11 +124,6 @@ class Parser:
             else_branch = self.statement()
         
         return If(condition, then_branch, else_branch)
-
-    def print_statement(self) -> Stmt:
-        value: Expr = self.expression()
-        self.consume(TokenType.SEMICOLON, 'Expect ";" after value.')
-        return Print(value)
 
     def expression_statement(self) -> Stmt:
         expr: Expr = self.expression()
@@ -324,7 +317,6 @@ class Parser:
             TokenType.FOR,   
             TokenType.IF,    
             TokenType.WHILE, 
-            TokenType.PRINT, 
             TokenType.RETURN 
         }
 

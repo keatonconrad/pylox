@@ -1,6 +1,6 @@
 from environment import Environment
 from lox_callable import LoxCallable
-from stmt import Expression, Print, Stmt, Var, Block, If, While, Break, Function, Return
+from stmt import Expression, Stmt, Var, Block, If, While, Break, Function, Return
 from token_type import TokenType
 from visitor import Visitor
 from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical, Call
@@ -22,8 +22,18 @@ class Interpreter(Visitor):
                 return time.process_time()
             def __str__(self):
                 return '<native function "clock">'
+
+        class Print(LoxCallable):
+            def arity(self):
+                return 1
+            def call(self, interpreter: Interpreter, arguments: list = []):
+                message = interpreter.stringify(arguments[0])
+                print(message)
+            def __str__(self):
+                return '<native function "print">'
         
         self.globals.define('clock', Clock())
+        self.globals.define('print', Print())
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -141,10 +151,6 @@ class Interpreter(Visitor):
         if stmt.value is not None:
             value = self.evaluate(stmt.value)
         raise LoxReturnException(value)
-
-    def visit_print_stmt(self, stmt: Print) -> None:
-        value = self.evaluate(stmt.expression)
-        print(self.stringify(value))
 
     def visit_while_stmt(self, stmt: While) -> None:
         try:
