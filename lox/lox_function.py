@@ -4,11 +4,12 @@ from environment import Environment
 from exceptions import LoxReturnException
 
 class LoxFunction(LoxCallable):
-    def __init__(self, declaration: Function):
+    def __init__(self, declaration: Function, closure: Environment):
         self.declaration = declaration
+        self.closure = closure
 
     def call(self, interpreter: "Interpreter", arguments: list):
-        environment: Environment = Environment(interpreter.globals)
+        environment: Environment = Environment(self.closure)
 
         for i in range(len(self.declaration.params)):
             environment.define(self.declaration.params[i].lexeme, arguments[i])
