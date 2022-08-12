@@ -1,7 +1,7 @@
 from lib2to3.pgen2.tokenize import TokenError
 from token import Token
 from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
-from stmt import Stmt, Print, Expression, Var, Block, If, While, Break
+from stmt import Stmt, Print, Expression, Var, Block, If, While, Break, Function
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
@@ -25,6 +25,8 @@ class Parser:
 
     def declaration(self) -> Optional[Stmt]:
         try:
+            if self.match(TokenType.FUN):
+                return self.function_statement(kind='function')
             if self.match(TokenType.VAR):
                 return self.var_declaration()
             return self.statement()
@@ -125,6 +127,24 @@ class Parser:
         expr: Expr = self.expression()
         self.consume(TokenType.SEMICOLON, 'Expect ";" after expression.')
         return Expression(expr)
+
+    def function_statement(self, kind: str) -> Stmt:
+        name: Token = self.consume(TokenType.IDENTIFIER, f'Expect {kind} name.')
+        self.consume(TokenType.LEFT_PAREN, f'Expect "(" after {kind} name.')
+        parameters: list[Token] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    LoxParseError(self.peek(), 'Can\'t have more than 255 parameters').what()
+                    self.had_error = True
+                parameters.append(self.consume(TokenType.IDENTIFIER, 'Expect parameter name.'))
+                if not self.match(TokenType.COMMA):
+                    break
+        self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after parameters.')
+
+        self.consume(TokenType.LEFT_BRACE, 'Expect "{" before ' + kind + ' body.')
+        body: list[Stmt] = self.block()
+        return Function(name, parameters, body)
 
     def block(self) -> list[Stmt]:
         statements = []
