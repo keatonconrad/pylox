@@ -50,7 +50,7 @@ class Lox:
             return
 
         resolver: Resolver = Resolver(cls.interpreter)
-        resolver.resolve(statements)
+        resolver.resolve_list(statements)
 
         if resolver.had_error:
             cls.had_error = True

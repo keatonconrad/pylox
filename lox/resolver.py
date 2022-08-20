@@ -2,9 +2,9 @@ from typing import Union
 from expr import Expr, Variable, Assign, Binary, Call, Grouping, Literal, Logical, Unary
 from visitor import Visitor
 from stmt import Stmt, Block, Var, Function, Expression, If, Return, While
-from token import Token
 from exceptions import LoxStaticError
 from enum import Enum
+from token import Token
 
 
 class FunctionType(Enum):
@@ -102,7 +102,7 @@ class Resolver(Visitor):
         for param in function.params:
             self.declare(param)
             self.define(param)
-        self.resolve(function.body)
+        self.resolve_list(function.body)
         self.end_scope()
         # When we're done resolving the function body, restore the current function
         # to the enclosing function

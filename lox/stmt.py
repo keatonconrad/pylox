@@ -1,9 +1,11 @@
 from expr import Expr
 from token import Token
 
+
 class Stmt:
     def __str__(self) -> str:
         return str(self.expression)
+
 
 class Expression(Stmt):
     def __init__(self, expr: Expr):
@@ -12,6 +14,7 @@ class Expression(Stmt):
     def accept(self, visitor: "Visitor"):
         return visitor.visit_expression_stmt(self)
 
+
 class Var(Stmt):
     def __init__(self, name: Token, initializer: Expr):
         self.name = name
@@ -19,13 +22,15 @@ class Var(Stmt):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_var_stmt(self)
-        
+
+
 class Block(Stmt):
     def __init__(self, statements: list[Stmt]):
         self.statements = statements
-    
+
     def accept(self, visitor: "Visitor"):
         return visitor.visit_block_stmt(self)
+
 
 class If(Stmt):
     def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt):
@@ -36,6 +41,7 @@ class If(Stmt):
     def accept(self, visitor: "Visitor"):
         return visitor.visit_if_stmt(self)
 
+
 class While(Stmt):
     def __init__(self, condition: Expr, body: Stmt):
         self.condition = condition
@@ -44,12 +50,14 @@ class While(Stmt):
     def accept(self, visitor: "Visitor"):
         return visitor.visit_while_stmt(self)
 
+
 class Break(Stmt):
     def __init__(self):
         pass
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_break_stmt(self)
+
 
 class Function(Stmt):
     def __init__(self, name: Token, params: list[Token], body: list[Stmt]):
@@ -59,6 +67,7 @@ class Function(Stmt):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_function_stmt(self)
+
 
 class Return(Stmt):
     def __init__(self, keyword: Token, value: Expr):
