@@ -4,12 +4,19 @@ from visitor import Visitor
 from stmt import Stmt, Block, Var, Function, Expression, If, Return, While
 from token import Token
 from exceptions import LoxStaticError
+from enum import Enum
+
+
+class FunctionType(Enum):
+    NONE = 0
+    FUNCTION = 1
 
 
 class Resolver(Visitor):
     def __init__(self, interpreter: "Interpreter"):
         self.interpreter = interpreter
         self.scopes: list[dict[str, bool]] = []
+        self.current_function = FunctionType.NONE
         self.had_error: bool = False
 
     def visit_block_stmt(self, stmt: Block) -> None:
@@ -26,7 +33,7 @@ class Resolver(Visitor):
     def visit_function_stmt(self, stmt: Function) -> None:
         self.declare(stmt.name)
         self.define(stmt.name)
-        self.resolve_function(stmt)
+        self.resolve_function(stmt, FunctionType.FUNCTION)
 
     def visit_if_stmt(self, stmt: If) -> None:
         self.resolve(stmt.condition)
@@ -39,6 +46,9 @@ class Resolver(Visitor):
         self.resolve(stmt.body)
 
     def visit_return_stmt(self, stmt: Return) -> None:
+        if self.current_function == FunctionType.NONE:
+            LoxStaticError(stmt.keyword, "Can't return from top-level code.").what()
+            self.had_error = True
         if stmt.value is not None:
             self.resolve(stmt.value)
 
@@ -85,13 +95,18 @@ class Resolver(Visitor):
     def resolve(self, obj: Union[Stmt, Expr]) -> None:
         obj.accept(self)
 
-    def resolve_function(self, function: Function) -> None:
+    def resolve_function(self, function: Function, function_type: FunctionType) -> None:
+        enclosing_function: FunctionType = self.current_function
+        self.current_function = function_type
         self.begin_scope()
         for param in function.params:
             self.declare(param)
             self.define(param)
         self.resolve(function.body)
         self.end_scope()
+        # When we're done resolving the function body, restore the current function
+        # to the enclosing function
+        self.current_function = enclosing_function
 
     def resolve_local(self, expr: Expr, name: Token) -> None:
         for i in range(len(self.scopes) - 1, -1, -1):
@@ -111,8 +126,7 @@ class Resolver(Visitor):
 
         if name.lexeme in self.scopes[-1]:
             LoxStaticError(
-                name,
-                "Another variable with this name is already declared in this scope.",
+                name, "Already a variable with this name in this scope."
             ).what()
             self.had_error = True
         else:
