@@ -76,3 +76,12 @@ class Return(Stmt):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_return_stmt(self)
+
+
+class Class(Stmt):
+    def __init__(self, name: Token, methods: list[Function]):
+        self.name = name
+        self.methods = methods
+
+    def accept(self, visitor: "Visitor"):
+        return visitor.visit_class_stmt(self)

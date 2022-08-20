@@ -1,13 +1,27 @@
 from environment import Environment
 from lox_callable import LoxCallable
-from stmt import Expression, Stmt, Var, Block, If, While, Break, Function, Return
+from stmt import Expression, Stmt, Var, Block, If, While, Break, Function, Return, Class
 from token_type import TokenType
 from visitor import Visitor
-from expr import Expr, Literal, Grouping, Unary, Binary, Variable, Assign, Logical, Call
+from expr import (
+    Expr,
+    Literal,
+    Grouping,
+    Unary,
+    Binary,
+    Variable,
+    Assign,
+    Logical,
+    Call,
+    Get,
+    Set,
+)
 from token import Token
 from exceptions import LoxRuntimeError, LoxBreakException, LoxReturnException
 import time
 from lox_function import LoxFunction
+from lox_class import LoxClass
+from lox_instance import LoxInstance
 
 
 class Interpreter(Visitor):
@@ -67,6 +81,23 @@ class Interpreter(Visitor):
             )
 
         return callee.call(self, arguments)
+
+    def visit_get_expr(self, expr: Get):
+        object_ = self.evaluate(expr.object)
+        if isinstance(object_, LoxInstance):
+            return object_.get(expr.name)
+
+        raise LoxRuntimeError(expr.name, "Only instances have properties.")
+
+    def visit_set_expr(self, expr: Set):
+        object_ = self.evaluate(expr.object)
+
+        if not isinstance(object_, LoxInstance):
+            raise LoxRuntimeError(expr.name, "Only instances have fields.")
+
+        value = self.evaluate(expr.value)
+        object_.set(expr.name, value)
+        return value
 
     def visit_literal_expr(self, expr: Literal):
         return expr.value
@@ -195,6 +226,11 @@ class Interpreter(Visitor):
             self.execute(stmt.then_branch)
         elif stmt.else_branch is not None:
             self.execute(stmt.else_branch)
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self.environment.define(stmt.name.lexeme, None)
+        klass: LoxClass = LoxClass(stmt.name.lexeme)
+        self.environment.assign(stmt.name, klass)
 
     def look_up_variable(self, name: Token, expr: Expr) -> None:
         distance: int = self.locals.get(expr)

@@ -1,7 +1,19 @@
 from typing import Union
-from expr import Expr, Variable, Assign, Binary, Call, Grouping, Literal, Logical, Unary
+from expr import (
+    Expr,
+    Variable,
+    Assign,
+    Binary,
+    Call,
+    Grouping,
+    Literal,
+    Logical,
+    Unary,
+    Get,
+    Set,
+)
 from visitor import Visitor
-from stmt import Stmt, Block, Var, Function, Expression, If, Return, While
+from stmt import Stmt, Block, Var, Function, Expression, If, Return, While, Class
 from exceptions import LoxStaticError
 from enum import Enum
 from token import Token
@@ -18,6 +30,10 @@ class Resolver(Visitor):
         self.scopes: list[dict[str, bool]] = []
         self.current_function = FunctionType.NONE
         self.had_error: bool = False
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self.declare(stmt.name)
+        self.define(stmt.name)
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.begin_scope()
@@ -74,6 +90,13 @@ class Resolver(Visitor):
         self.resolve(expr.callee)
         for argument in expr.arguments:
             self.resolve(argument)
+
+    def visit_get_expr(self, expr: Get) -> None:
+        self.resolve(expr.object)
+
+    def visit_set_expr(self, expr: Set) -> None:
+        self.resolve(expr.value)
+        self.resolve(expr.object)
 
     def visit_grouping_expr(self, expr: Grouping) -> None:
         self.resolve(expr.expression)

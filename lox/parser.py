@@ -1,9 +1,22 @@
 from token import Token
-from expr import Expr, Binary, Unary, Literal, Grouping, Variable, Assign, Logical, Call
-from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return
+from expr import (
+    Expr,
+    Binary,
+    Unary,
+    Literal,
+    Grouping,
+    Variable,
+    Assign,
+    Logical,
+    Call,
+    Get,
+    Set,
+)
+from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return, Class
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
+
 
 class Parser:
     def __init__(self, tokens: list[Token]):
@@ -24,22 +37,35 @@ class Parser:
 
     def declaration(self) -> Optional[Stmt]:
         try:
+            if self.match(TokenType.CLASS):
+                return self.class_declaration()
             if self.match(TokenType.FUN):
-                return self.function_statement(kind='function')
+                return self.function_statement(kind="function")
             if self.match(TokenType.VAR):
                 return self.var_declaration()
             return self.statement()
         except LoxParseError:
             self.synchronize()
 
+    def class_declaration(self) -> Stmt:
+        name: Token = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        self.consume(TokenType.LEFT_BRACE, 'Expect "{" before class body.')
+
+        methods: list[Function] = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end:
+            methods.append(self.function_statement(kind="method"))
+
+        self.consume(TokenType.RIGHT_BRACE, 'Expect "}" after class body.')
+        return Class(name, methods)
+
     def var_declaration(self) -> Stmt:
-        name: Token = self.consume(TokenType.IDENTIFIER, 'Expect variable name.')
+        name: Token = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
 
         # Sets up optional initialized value
         initializer: Expr = None
         if self.match(TokenType.EQUAL):
             initializer = self.expression()
-        
+
         self.consume(TokenType.SEMICOLON, 'Expect ";" after variable declaration.')
         return Var(name, initializer)
 
@@ -59,7 +85,9 @@ class Parser:
         return self.expression_statement()
 
     def return_statement(self) -> Stmt:
-        keyword: Token = self.previous()  # We keep the "return" keyword for error reporting
+        keyword: Token = (
+            self.previous()
+        )  # We keep the "return" keyword for error reporting
         value: Expr = None
         if not self.check(TokenType.SEMICOLON):
             value = self.expression()
@@ -106,7 +134,7 @@ class Parser:
         condition: Expr = self.expression()
         self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after condition.')
         body: Stmt = self.statement()
-        
+
         return While(condition, body)
 
     def break_statement(self) -> Stmt:
@@ -122,7 +150,7 @@ class Parser:
         else_branch: Stmt = None
         if self.match(TokenType.ELSE):
             else_branch = self.statement()
-        
+
         return If(condition, then_branch, else_branch)
 
     def expression_statement(self) -> Stmt:
@@ -131,20 +159,24 @@ class Parser:
         return Expression(expr)
 
     def function_statement(self, kind: str) -> Stmt:
-        name: Token = self.consume(TokenType.IDENTIFIER, f'Expect {kind} name.')
+        name: Token = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
         self.consume(TokenType.LEFT_PAREN, f'Expect "(" after {kind} name.')
         parameters: list[Token] = []
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
                 if len(parameters) >= 255:
-                    LoxParseError(self.peek(), 'Can\'t have more than 255 parameters').what()
+                    LoxParseError(
+                        self.peek(), "Can't have more than 255 parameters"
+                    ).what()
                     self.had_error = True
-                parameters.append(self.consume(TokenType.IDENTIFIER, 'Expect parameter name.'))
+                parameters.append(
+                    self.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                )
                 if not self.match(TokenType.COMMA):
                     break
         self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after parameters.')
 
-        self.consume(TokenType.LEFT_BRACE, 'Expect "{" before ' + kind + ' body.')
+        self.consume(TokenType.LEFT_BRACE, 'Expect "{" before ' + kind + " body.")
         body: list[Stmt] = self.block()
         return Function(name, parameters, body)
 
@@ -167,9 +199,11 @@ class Parser:
 
             if isinstance(expr, Variable):
                 return Assign(expr.name, value)
-            
-            LoxParseError(equals, 'Invalid assignment target.').what()
-        
+            elif isinstance(expr, Get):
+                return Set(expr.object, expr.name, value)
+
+            LoxParseError(equals, "Invalid assignment target.").what()
+
         return expr
 
     def or_expr(self) -> Expr:
@@ -191,7 +225,7 @@ class Parser:
             expr = Logical(expr, operator, right)
 
         return expr
-    
+
     def equality(self) -> Expr:
         expr: Expr = self.comparison()
 
@@ -199,17 +233,22 @@ class Parser:
             operator: Token = self.previous()
             right: Expr = self.comparison()
             expr = Binary(expr, operator, right)
-        
+
         return expr
 
     def comparison(self) -> Expr:
         expr: Expr = self.term()
 
-        while self.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL):
+        while self.match(
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+        ):
             operator: Token = self.previous()
             right: Expr = self.term()
             expr = Binary(expr, operator, right)
-        
+
         return expr
 
     def term(self) -> Expr:
@@ -221,7 +260,7 @@ class Parser:
             expr = Binary(expr, operator, right)
 
         return expr
-    
+
     def factor(self) -> Expr:
         expr: Expr = self.unary()
 
@@ -229,7 +268,7 @@ class Parser:
             operator: Token = self.previous()
             right: Expr = self.unary()
             expr = Binary(expr, operator, right)
-        
+
         return expr
 
     def unary(self) -> Expr:
@@ -246,9 +285,14 @@ class Parser:
         while True:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self.finish_call(expr)
+            elif self.match(TokenType.DOT):
+                name: Token = self.consume(
+                    TokenType.IDENTIFIER, 'Expect property name after ".".'
+                )
+                expr = Get(expr, name)
             else:
                 break
-        
+
         return expr
 
     def finish_call(self, callee: Expr) -> Expr:
@@ -257,13 +301,17 @@ class Parser:
         if not self.check(TokenType.RIGHT_PAREN):
             while True:
                 if len(arguments) >= 255:
-                    LoxParseError(self.peek(), 'Can\'t have more than 255 arguments').what()
+                    LoxParseError(
+                        self.peek(), "Can't have more than 255 arguments"
+                    ).what()
                     self.had_error = True
                 arguments.append(self.expression())
                 if not self.match(TokenType.COMMA):
                     break
-        
-        paren: Token = self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after arguments.')
+
+        paren: Token = self.consume(
+            TokenType.RIGHT_PAREN, 'Expect ")" after arguments.'
+        )
 
         return Call(callee, paren, arguments)
 
@@ -311,13 +359,13 @@ class Parser:
         # Discard tokens until it finds a statement boundary
 
         statement_starts = {
-            TokenType.CLASS,                   
-            TokenType.FUN,   
-            TokenType.VAR,   
-            TokenType.FOR,   
-            TokenType.IF,    
-            TokenType.WHILE, 
-            TokenType.RETURN 
+            TokenType.CLASS,
+            TokenType.FUN,
+            TokenType.VAR,
+            TokenType.FOR,
+            TokenType.IF,
+            TokenType.WHILE,
+            TokenType.RETURN,
         }
 
         self.advance()
@@ -328,7 +376,7 @@ class Parser:
             elif self.peek().type in statement_starts:
                 return
             return
-    
+
     def check(self, token_type: TokenType) -> bool:
         # Returns True if current token is of token_type
         if self.is_at_end:
@@ -339,11 +387,11 @@ class Parser:
         if not self.is_at_end:
             self.current += 1
         return self.previous()
-    
+
     @property
     def is_at_end(self) -> bool:
         return self.peek().type == TokenType.EOF
-    
+
     def peek(self) -> Token:
         # Returns current token without consuming it
         return self.tokens[self.current]

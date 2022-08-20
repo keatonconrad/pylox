@@ -1,7 +1,9 @@
-var a = "outer";
-fun scope(a) {
-  var a = "local";
-  return a;
+class DevonshireCream {
+  serveOn() {
+    return "scones";
+  }
 }
-print(2);
-print(scope(3));
+
+var instance = DevonshireCream();
+instance.property = "My property!";
+print(instance.property);
