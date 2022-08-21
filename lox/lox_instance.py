@@ -1,5 +1,6 @@
 from token import Token
 from exceptions import LoxRuntimeError
+from lox_function import LoxFunction
 
 
 class LoxInstance:
@@ -10,6 +11,10 @@ class LoxInstance:
     def get(self, name: Token):
         if name.lexeme in self.fields:
             return self.fields.get(name.lexeme)
+
+        method: LoxFunction = self.klass.find_method(name.lexeme)
+        if method is not None:
+            return method.bind(self)
 
         raise LoxRuntimeError(name, f'Undefined property "{name.lexeme}".')
 

@@ -15,6 +15,7 @@ from expr import (
     Call,
     Get,
     Set,
+    This,
 )
 from token import Token
 from exceptions import LoxRuntimeError, LoxBreakException, LoxReturnException
@@ -98,6 +99,9 @@ class Interpreter(Visitor):
         value = self.evaluate(expr.value)
         object_.set(expr.name, value)
         return value
+
+    def visit_this_expr(self, expr: This):
+        return self.look_up_variable(expr.keyword, expr)
 
     def visit_literal_expr(self, expr: Literal):
         return expr.value
@@ -229,7 +233,10 @@ class Interpreter(Visitor):
 
     def visit_class_stmt(self, stmt: Class) -> None:
         self.environment.define(stmt.name.lexeme, None)
-        klass: LoxClass = LoxClass(stmt.name.lexeme)
+        methods: dict[str, LoxFunction] = {}
+        for method in stmt.methods:
+            methods[method.name.lexeme] = LoxFunction(method, self.environment)
+        klass: LoxClass = LoxClass(stmt.name.lexeme, methods)
         self.environment.assign(stmt.name, klass)
 
     def look_up_variable(self, name: Token, expr: Expr) -> None:

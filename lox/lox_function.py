@@ -3,6 +3,7 @@ from stmt import Function
 from environment import Environment
 from exceptions import LoxReturnException
 
+
 class LoxFunction(LoxCallable):
     def __init__(self, declaration: Function, closure: Environment):
         self.declaration = declaration
@@ -18,9 +19,14 @@ class LoxFunction(LoxCallable):
         except LoxReturnException as return_value:
             return return_value.value
         return None
-    
+
+    def bind(self, instance: "LoxInstance") -> "LoxFunction":
+        environment: Environment = Environment(self.closure)
+        environment.define("this", instance)
+        return LoxFunction(self.declaration, environment)
+
     def arity(self) -> int:
         return len(self.declaration.params)
 
     def __str__(self) -> str:
-        return f'<fn {self.declaration.name.lexeme}>'
+        return f"<fn {self.declaration.name.lexeme}>"

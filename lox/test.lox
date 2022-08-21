@@ -5,5 +5,4 @@ class DevonshireCream {
 }
 
 var instance = DevonshireCream();
-instance.property = "My property!";
-print(instance.property);
+print(instance.serveOn());

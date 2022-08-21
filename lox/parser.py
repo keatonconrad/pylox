@@ -11,6 +11,7 @@ from expr import (
     Call,
     Get,
     Set,
+    This,
 )
 from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return, Class
 from token_type import TokenType
@@ -326,6 +327,8 @@ class Parser:
             # We just consumed the number or string in the self.match,
             # so we have to go back and get the previous token's literal
             return Literal(self.previous().literal)
+        elif self.match(TokenType.THIS):
+            return This(self.previous())
         elif self.match(TokenType.IDENTIFIER):
             return Variable(self.previous())
         elif self.match(TokenType.LEFT_PAREN):
