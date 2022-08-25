@@ -29,6 +29,7 @@ class FunctionType(Enum):
     NONE = 0
     FUNCTION = 1
     METHOD = 2
+    INITIALIZER = 3
 
 
 class Resolver(Visitor):
@@ -49,6 +50,9 @@ class Resolver(Visitor):
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
             declaration: FunctionType = FunctionType.METHOD
+            if method.name.lexeme == "init":
+                declaration = FunctionType.INITIALIZER
+
             self.resolve_function(method, declaration)
         self.end_scope()
         self.current_class = enclosing_class
@@ -84,6 +88,11 @@ class Resolver(Visitor):
             LoxStaticError(stmt.keyword, "Can't return from top-level code.").what()
             self.had_error = True
         if stmt.value is not None:
+            if self.current_function == FunctionType.INITIALIZER:
+                LoxStaticError(
+                    stmt.keyword, "Can't return a value from an initializer"
+                ).what()
+                self.had_error = True
             self.resolve(stmt.value)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:

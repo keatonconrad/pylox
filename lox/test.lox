@@ -1,8 +1,11 @@
 class DevonshireCream {
-  serveOn() {
-    return "scones";
+  init() {
+    this.myprop = "test!";
+    print(this.myprop);
+    return;
   }
 }
 
 var instance = DevonshireCream();
-print(instance.serveOn());
+print(instance.myprop);
+print(instance.init());
