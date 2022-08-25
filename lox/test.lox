@@ -1,14 +1,25 @@
 class Doughnut {
+  init() {
+    this.testing = "Testing!";
+  }
+
   cook() {
     print("Fry until golden brown.");
   }
 }
 
 class BostonCream < Doughnut {
+  init() {
+    this.newtesting = "new testing!";
+    super.init();
+  }
   cook() {
     super.cook();
     print("Pipe full of custard and coat with chocolate.");
   }
 }
 
-BostonCream().cook();
+var bc = BostonCream();
+bc.cook();
+print(bc.testing);
+print(bc.newtesting);
