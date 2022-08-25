@@ -1,11 +1,14 @@
-class DevonshireCream {
-  init() {
-    this.myprop = "test!";
-    print(this.myprop);
-    return;
+class Doughnut {
+  cook() {
+    print("Fry until golden brown.");
   }
 }
 
-var instance = DevonshireCream();
-print(instance.myprop);
-print(instance.init());
+class BostonCream < Doughnut {
+  cook() {
+    super.cook();
+    print("Pipe full of custard and coat with chocolate.");
+  }
+}
+
+BostonCream().cook();

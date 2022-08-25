@@ -12,6 +12,7 @@ from expr import (
     Get,
     Set,
     This,
+    Super,
 )
 from visitor import Visitor
 from stmt import Stmt, Block, Var, Function, Expression, If, Return, While, Class
@@ -23,6 +24,7 @@ from token import Token
 class ClassType(Enum):
     NONE = 0
     CLASS = 1
+    SUBCLASS = 2
 
 
 class FunctionType(Enum):
@@ -46,6 +48,18 @@ class Resolver(Visitor):
         self.declare(stmt.name)
         self.define(stmt.name)
 
+        if stmt.superclass is not None:
+            if stmt.name.lexeme == stmt.superclass.name.lexeme:
+                LoxStaticError(
+                    stmt.superclass.name, "A class can't inherit from itself."
+                ).what()
+            else:
+                self.current_class = ClassType.SUBCLASS
+                self.resolve(stmt.superclass)
+
+            self.begin_scope()
+            self.scopes[-1]["super"] = True
+
         self.begin_scope()
         self.scopes[-1]["this"] = True
         for method in stmt.methods:
@@ -55,6 +69,10 @@ class Resolver(Visitor):
 
             self.resolve_function(method, declaration)
         self.end_scope()
+
+        if stmt.superclass is not None:
+            self.end_scope()
+
         self.current_class = enclosing_class
 
     def visit_block_stmt(self, stmt: Block) -> None:
@@ -112,6 +130,17 @@ class Resolver(Visitor):
     def visit_binary_expr(self, expr: Binary) -> None:
         self.resolve(expr.left)
         self.resolve(expr.right)
+
+    def visit_super_expr(self, expr: Super) -> None:
+        if self.current_class == ClassType.NONE:
+            LoxStaticError(
+                expr.keyword, 'Can\'t use "super" outside of a class.'
+            ).what()
+        elif self.current_class != ClassType.SUBCLASS:
+            LoxStaticError(
+                expr.keyword, 'Can\'t use "super" in a class with no superclass.'
+            ).what()
+        self.resolve_local(expr, expr.keyword)
 
     def visit_call_expr(self, expr: Call) -> None:
         self.resolve(expr.callee)

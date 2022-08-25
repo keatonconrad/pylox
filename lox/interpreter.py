@@ -16,6 +16,7 @@ from expr import (
     Get,
     Set,
     This,
+    Super,
 )
 from token import Token
 from exceptions import LoxRuntimeError, LoxBreakException, LoxReturnException
@@ -178,6 +179,20 @@ class Interpreter(Visitor):
 
         return value
 
+    def visit_super_expr(self, expr: Super):
+        distance: int = self.locals.get(expr)
+        superclass: LoxClass = self.environment.get_at(distance, "super")
+        # The environment where "this" is bound is always right inside the environment where we store "super"
+        object_: LoxInstance = self.environment.get_at(distance - 1, "this")
+        method: LoxFunction = superclass.find_method(expr.method.lexeme)
+
+        if method is None:
+            raise LoxRuntimeError(
+                expr.method, f'Undefined property "{expr.method.lexeme}".'
+            )
+
+        return method.bind(object_)
+
     def visit_logical_expr(self, expr: Logical):
         left = self.evaluate(expr.left)
 
@@ -232,13 +247,30 @@ class Interpreter(Visitor):
             self.execute(stmt.else_branch)
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        superclass = None
+        if stmt.superclass is not None:
+            superclass = self.evaluate(stmt.superclass)
+            if not isinstance(superclass, LoxClass):
+                raise LoxRuntimeError(
+                    stmt.superclass.name, "Superclass must be a class."
+                )
+
         self.environment.define(stmt.name.lexeme, None)
+
+        if stmt.superclass is not None:
+            self.environment = Environment(self.environment)
+            self.environment.define("super", superclass)
+
         methods: dict[str, LoxFunction] = {}
         for method in stmt.methods:
             methods[method.name.lexeme] = LoxFunction(
                 method, self.environment, method.name.lexeme == "init"
             )
-        klass: LoxClass = LoxClass(stmt.name.lexeme, methods)
+        klass: LoxClass = LoxClass(stmt.name.lexeme, superclass, methods)
+
+        if superclass is not None:
+            self.environment = self.environment.enclosing
+
         self.environment.assign(stmt.name, klass)
 
     def look_up_variable(self, name: Token, expr: Expr) -> None:
