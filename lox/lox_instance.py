@@ -4,9 +4,10 @@ from lox_function import LoxFunction
 
 
 class LoxInstance:
-    def __init__(self, klass: "LoxClass"):
+    def __init__(self, klass: "LoxClass", value=None):
         self.klass: "LoxClass" = klass
         self.fields: dict = {}
+        self.value = value  # Value for literals
 
     def get(self, name: Token):
         if name.lexeme in self.fields:
@@ -22,4 +23,4 @@ class LoxInstance:
         self.fields[name.lexeme] = value
 
     def __str__(self) -> str:
-        return self.klass.name + " instance"
+        return f"<{self.klass.name} instance>"

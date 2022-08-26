@@ -24,12 +24,13 @@ import time
 from lox_function import LoxFunction
 from lox_class import LoxClass
 from lox_instance import LoxInstance
+from objects import global_environment, base_object, number_object
 
 
 class Interpreter(Visitor):
     def __init__(self):
         self.had_error: bool = False
-        self.globals: Environment = Environment()  # Global scope
+        self.globals: Environment = global_environment  # Global scope
         # Current scope starts as global scope
         self.environment: Environment = self.globals
         self.locals: dict = {}
@@ -55,8 +56,22 @@ class Interpreter(Visitor):
             def __str__(self):
                 return '<native function "print">'
 
+        class Type(LoxCallable):
+            def arity(self):
+                return 1
+
+            def call(self, interpreter: Interpreter, arguments: list = []):
+                print(type(arguments[0]))
+
+            def __str__(self):
+                return '<native function "type">'
+
         self.globals.define("clock", Clock())
         self.globals.define("print", Print())
+        self.globals.define("type", Type())
+
+        self.globals.define("object", base_object)
+        self.globals.define("number", number_object)
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -105,7 +120,10 @@ class Interpreter(Visitor):
         return self.look_up_variable(expr.keyword, expr)
 
     def visit_literal_expr(self, expr: Literal):
-        return expr.value
+        try:
+            return expr.value.value
+        except:
+            return expr.value
 
     def visit_unary_expr(self, expr: Unary):
         right = self.evaluate(expr.right)

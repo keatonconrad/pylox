@@ -14,10 +14,12 @@ from expr import (
     This,
     Super,
 )
+from lox_instance import LoxInstance
 from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return, Class
 from token_type import TokenType
 from exceptions import LoxParseError
 from typing import Optional
+from objects import number_object
 
 
 class Parser:
@@ -52,7 +54,7 @@ class Parser:
     def class_declaration(self) -> Stmt:
         name: Token = self.consume(TokenType.IDENTIFIER, "Expect class name.")
 
-        superclass: Variable = None
+        superclass: Variable = Variable(Token(TokenType.IDENTIFIER, "object", None, 1))
         if self.match(TokenType.LESS):
             self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
             superclass = Variable(self.previous())
@@ -333,7 +335,10 @@ class Parser:
         elif self.match(TokenType.NUMBER, TokenType.STRING):
             # We just consumed the number or string in the self.match,
             # so we have to go back and get the previous token's literal
-            return Literal(self.previous().literal)
+            # return Literal(self.previous().literal)
+            return Literal(
+                LoxInstance(klass=number_object, value=self.previous().literal)
+            )
         elif self.match(TokenType.THIS):
             return This(self.previous())
         elif self.match(TokenType.IDENTIFIER):

@@ -8,18 +8,10 @@ class Doughnut {
   }
 }
 
-class BostonCream < Doughnut {
-  init() {
-    this.newtesting = "new testing!";
-    super.init();
-  }
-  cook() {
-    super.cook();
-    print("Pipe full of custard and coat with chocolate.");
-  }
-}
+var doughnut = Doughnut();
+//doughnut.cook();
 
-var bc = BostonCream();
-bc.cook();
-print(bc.testing);
-print(bc.newtesting);
+//print(doughnut.test());
+print(object);
+
+print(type(3));
