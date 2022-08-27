@@ -3,8 +3,7 @@ from token import Token
 
 
 class Stmt:
-    def __str__(self) -> str:
-        return str(self.expression)
+    pass
 
 
 class Expression(Stmt):

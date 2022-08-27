@@ -122,6 +122,7 @@ class Resolver(Visitor):
                 expr.name, "Can't read local variable in its own initializer."
             ).what()
             self.had_error = True
+        self.resolve_local(expr, expr.name)
 
     def visit_assign_expr(self, expr: Assign) -> None:
         self.resolve(expr.value)
