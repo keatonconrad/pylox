@@ -13,6 +13,7 @@ from expr import (
     Set,
     This,
     Super,
+    TypeOf,
 )
 from visitor import Visitor
 from stmt import Stmt, Block, Var, Function, Expression, If, Return, While, Class
@@ -161,6 +162,9 @@ class Resolver(Visitor):
         self.resolve_local(expr, expr.keyword)
 
     def visit_grouping_expr(self, expr: Grouping) -> None:
+        self.resolve(expr.expression)
+
+    def visit_typeof_expr(self, expr: TypeOf) -> None:
         self.resolve(expr.expression)
 
     def visit_logical_expr(self, expr: Logical) -> None:

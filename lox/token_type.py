@@ -17,7 +17,7 @@ TokenType = Enum('TokenType', zip([
 
     # Keywords.
     'AND', 'CLASS', 'ELSE', 'FALSE', 'FUN', 'FOR', 'IF', 'NIL', 'OR',
-    'RETURN', 'SUPER', 'THIS', 'TRUE', 'VAR', 'WHILE', 'BREAK',
+    'RETURN', 'SUPER', 'THIS', 'TRUE', 'VAR', 'WHILE', 'BREAK', 'TYPEOF',
 
     'EOF'
 ], count()))

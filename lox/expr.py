@@ -129,3 +129,14 @@ class Super(Expr):
 
     def accept(self, visitor: "Visitor"):
         return visitor.visit_super_expr(self)
+
+
+class TypeOf(Expr):
+    def __init__(self, expression: Expr):
+        self.expression = expression
+
+    def accept(self, visitor):
+        return visitor.visit_typeof_expr(self)
+
+    def __str__(self) -> str:
+        return f"typeof {self.expression}"

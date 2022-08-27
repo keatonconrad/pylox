@@ -17,6 +17,7 @@ from expr import (
     Set,
     This,
     Super,
+    TypeOf,
 )
 from token import Token
 from exceptions import LoxRuntimeError, LoxBreakException, LoxReturnException
@@ -56,19 +57,8 @@ class Interpreter(Visitor):
             def __str__(self):
                 return '<native function "print">'
 
-        class Type(LoxCallable):
-            def arity(self):
-                return 1
-
-            def call(self, interpreter: Interpreter, arguments: list = []):
-                print(type(arguments[0]))
-
-            def __str__(self):
-                return '<native function "type">'
-
         self.globals.define("clock", Clock())
         self.globals.define("print", Print())
-        self.globals.define("type", Type())
 
         self.globals.define("object", base_object)
         self.globals.define("number", number_object)
@@ -121,7 +111,7 @@ class Interpreter(Visitor):
 
     def visit_literal_expr(self, expr: Literal):
         try:
-            return expr.value.value
+            return expr.value
         except:
             return expr.value
 
@@ -159,7 +149,7 @@ class Interpreter(Visitor):
                 return float(left) - float(right)
             case TokenType.PLUS:
                 if isinstance(left, float) and isinstance(right, float):
-                    return float(left) + float(right)
+                    return LoxInstance(number_object, float(left) + float(right))
                 elif isinstance(left, str) and isinstance(right, str):
                     return str(left) + str(right)
                 raise LoxRuntimeError(
@@ -182,6 +172,12 @@ class Interpreter(Visitor):
 
     def visit_grouping_expr(self, expr: Grouping):
         return self.evaluate(expr.expression)
+
+    def visit_typeof_expr(self, expr: TypeOf):
+        evaluated = self.evaluate(expr.expression)
+        return evaluated.klass.name
+        # print(expr.expression.value.klass)
+        return evaluated
 
     def visit_variable_expr(self, expr: Variable) -> Expr:
         return self.look_up_variable(expr.name, expr)

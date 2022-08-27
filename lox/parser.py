@@ -13,6 +13,7 @@ from expr import (
     Set,
     This,
     Super,
+    TypeOf,
 )
 from lox_instance import LoxInstance
 from stmt import Stmt, Expression, Var, Block, If, While, Break, Function, Return, Class
@@ -332,13 +333,16 @@ class Parser:
             return Literal(True)
         elif self.match(TokenType.NIL):
             return Literal(None)
-        elif self.match(TokenType.NUMBER, TokenType.STRING):
+        elif self.match(TokenType.NUMBER):
             # We just consumed the number or string in the self.match,
             # so we have to go back and get the previous token's literal
-            # return Literal(self.previous().literal)
             return Literal(
                 LoxInstance(klass=number_object, value=self.previous().literal)
             )
+        elif self.match(TokenType.STRING):
+            # We just consumed the number or string in the self.match,
+            # so we have to go back and get the previous token's literal
+            return Literal(self.previous().literal)
         elif self.match(TokenType.THIS):
             return This(self.previous())
         elif self.match(TokenType.IDENTIFIER):
@@ -354,6 +358,9 @@ class Parser:
             expr: Expr = self.expression()
             self.consume(TokenType.RIGHT_PAREN, 'Expect ")" after expression.')
             return Grouping(expr)
+        elif self.match(TokenType.TYPEOF):
+            expr: Expr = self.expression()
+            return TypeOf(expr)
 
         raise self.error(self.peek(), "Expect expression.")
 

@@ -21,7 +21,8 @@ class Scanner:
         'true': TokenType.TRUE,
         'var': TokenType.VAR,
         'while': TokenType.WHILE,
-        'break': TokenType.BREAK
+        'break': TokenType.BREAK,
+        'typeof': TokenType.TYPEOF
     }
 
     def __init__(self, source: str):
